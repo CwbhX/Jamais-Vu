@@ -11,6 +11,12 @@ class Dejavu(object):
 
     SONG_ID = "song_id"
     SONG_NAME = 'song_name'
+
+    SONG_ARTIST = "song_artist"
+    SONG_ALBUM = "song_album"
+    SONG_GENRE = "song_genre"
+    SONG_LENGTH = "song_length"
+
     CONFIDENCE = 'confidence'
     MATCH_TIME = 'match_time'
     OFFSET = 'offset'
@@ -146,6 +152,10 @@ class Dejavu(object):
         if song:
             # TODO: Clarify what `get_song_by_id` should return.
             songname = song.get(Dejavu.SONG_NAME, None)
+            songartist = song.get(Dejavu.SONG_ARTIST, None)
+            songalbum = song.get(Dejavu.SONG_ALBUM, None)
+            songgenre = song.get(Dejavu.SONG_GENRE, None)
+            songlength = song.get(Dejavu.SONG_LENGTH, 0)
         else:
             return None
 
@@ -154,12 +164,17 @@ class Dejavu(object):
                          fingerprint.DEFAULT_WINDOW_SIZE *
                          fingerprint.DEFAULT_OVERLAP_RATIO, 5)
         song = {
-            Dejavu.SONG_ID : song_id,
-            Dejavu.SONG_NAME : songname,
-            Dejavu.CONFIDENCE : largest_count,
-            Dejavu.OFFSET : int(largest),
-            Dejavu.OFFSET_SECS : nseconds,
-            Database.FIELD_FILE_SHA1 : song.get(Database.FIELD_FILE_SHA1, None),}
+            Dejavu.SONG_ID: song_id,
+            Dejavu.SONG_NAME: songname,
+            Dejavu.SONG_ARTIST: songartist,
+            Dejavu.SONG_ALBUM: songalbum,
+            Dejavu.SONG_GENRE: songgenre,
+            Dejavu.SONG_LENGTH: songlength
+
+            Dejavu.CONFIDENCE: largest_count,
+            Dejavu.OFFSET: int(largest),
+            Dejavu.OFFSET_SECS: nseconds,
+            Database.FIELD_FILE_SHA1: song.get(Database.FIELD_FILE_SHA1, None),}
         return song
 
     def recognize(self, recognizer, *options, **kwoptions):

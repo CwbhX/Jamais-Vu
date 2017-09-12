@@ -78,13 +78,12 @@ class SQLDatabase(Database):
 			`%s` varchar(250) not null,
 			`%s` varchar(250) not null,
 			`%s` mediumint unsigned not null,
-			`%s` mediumint unsigned not null,
             `%s` tinyint default 0,
             `%s` binary(20) not null,
         PRIMARY KEY (`%s`),
         UNIQUE KEY `%s` (`%s`)
     ) ENGINE=INNODB;""" % (
-        SONGS_TABLENAME, Database.FIELD_SONG_ID, Database.FIELD_SONGNAME, Database.FIELD_ARTIST, FIELD_ALBUM, FIELD_GENRE, FIELD_LENGTH, FIELD_IDENTIFIED, FIELD_FINGERPRINTED,
+        SONGS_TABLENAME, Database.FIELD_SONG_ID, Database.FIELD_SONGNAME, Database.FIELD_ARTIST, FIELD_ALBUM, FIELD_GENRE, FIELD_LENGTH, FIELD_FINGERPRINTED,
         Database.FIELD_FILE_SHA1,
         Database.FIELD_SONG_ID, Database.FIELD_SONG_ID, Database.FIELD_SONG_ID,
     )
