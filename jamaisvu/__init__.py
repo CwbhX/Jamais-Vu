@@ -5,6 +5,7 @@ import multiprocessing
 import os
 import traceback
 import sys
+# The first backend for finding songs that we haven't already fingerprinted
 
 
 class Dejavu(object):

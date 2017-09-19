@@ -77,13 +77,14 @@ class SQLDatabase(Database):
 			`%s` varchar(250) not null,
 			`%s` varchar(250) not null,
 			`%s` varchar(250) not null,
+            '%s' boolean default null,
 			`%s` mediumint unsigned not null,
             `%s` tinyint default 0,
             `%s` binary(20) not null,
         PRIMARY KEY (`%s`),
         UNIQUE KEY `%s` (`%s`)
     ) ENGINE=INNODB;""" % (
-        SONGS_TABLENAME, Database.FIELD_SONG_ID, Database.FIELD_SONGNAME, Database.FIELD_ARTIST, FIELD_ALBUM, FIELD_GENRE, FIELD_LENGTH, FIELD_FINGERPRINTED,
+        SONGS_TABLENAME, Database.FIELD_SONG_ID, Database.FIELD_SONGNAME, Database.FIELD_ARTIST, FIELD_ALBUM, FIELD_GENRE, FIELD_EXPLICIT, FIELD_LENGTH, FIELD_FINGERPRINTED,
         Database.FIELD_FILE_SHA1,
         Database.FIELD_SONG_ID, Database.FIELD_SONG_ID, Database.FIELD_SONG_ID,
     )
@@ -240,12 +241,12 @@ class SQLDatabase(Database):
         with self.cursor() as cur:
             cur.execute(self.INSERT_FINGERPRINT, (hash, sid, offset))
 
-    def insert_song(self, songname, artist, album, genre, length, file_hash):
+    def insert_song(self, songname, artist, album, genre, explicit, length, file_hash):
         """
         Inserts song in the database and returns the ID of the inserted record.
         """
         with self.cursor() as cur:
-            cur.execute(self.INSERT_SONG, (songname, artist, album, genre, length, file_hash))
+            cur.execute(self.INSERT_SONG, (songname, artist, album, genre, explicit, length, file_hash))
             return cur.lastrowid
 
     def query(self, hash):

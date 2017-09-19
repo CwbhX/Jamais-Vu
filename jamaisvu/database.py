@@ -13,6 +13,7 @@ class Database(object):
     FIELD_ARTIST = "song_artist"
     FIELD_ALBUM = "song_album"
     FIELD_GENRE = "song_genre"
+    FIELD_EXPLICIT = "song_explicit"
     FIELD_LENGTH = "song_length"
     FIELD_IDENTIFIED = "song_identified"
 
