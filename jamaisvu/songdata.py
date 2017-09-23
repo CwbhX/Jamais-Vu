@@ -8,9 +8,7 @@ class SongDataFinder(object):
 
     def __init__(self, acoustid_apikey):
         self.acoustid_apikey = acoustid_apikey
-        self.discogs_client_apikey = discogs_client_apikey
-        self.discogs_client_secretkey = discogs_client_secretkey
-        self.discogs = discogs_client.Client('Jamais Vu\0.1')
+        self.spotifysearch = SpotifySearch()
 
     def _topresult(self, filename):  # Use acoustID Webservice for basic information
         results = acoustid.match(self.acoustid_apikey, filename)
@@ -19,11 +17,9 @@ class SongDataFinder(object):
 
     def matchFile(self, filename):
         title, artist, score = self._topresult(filename)
-        # TODO
+        self.spotifysearch.search("%s - %s" % (title, artist))  # Plug back in our acoustID results into spotify search
 
-
-
-        return
+        return self.spotifysearch.selectResult(0)  # Return the resulting spotify track
 
 
 class SpotifySearch(object):

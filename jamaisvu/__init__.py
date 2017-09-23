@@ -1,14 +1,10 @@
 from dejavu.database import get_database, Database
+from songdata import SongDataFinder
 import dejavu.decoder as decoder
 import fingerprint
-import multiprocessing
-import os
-import traceback
-import sys
-# The first backend for finding songs that we haven't already fingerprinted
 
 
-class Dejavu(object):
+class Jamaisvu(object):
 
     SONG_ID = "song_id"
     SONG_NAME = 'song_name'
@@ -16,6 +12,7 @@ class Dejavu(object):
     SONG_ARTIST = "song_artist"
     SONG_ALBUM = "song_album"
     SONG_GENRE = "song_genre"
+    SONG_EXPLICIT = "song_explicit"
     SONG_LENGTH = "song_length"
 
     CONFIDENCE = 'confidence'
@@ -24,7 +21,7 @@ class Dejavu(object):
     OFFSET_SECS = 'offset_seconds'
 
     def __init__(self, config):
-        super(Dejavu, self).__init__()
+        super(Jamaisvu, self).__init__()
 
         self.config = config
 
@@ -39,6 +36,9 @@ class Dejavu(object):
         self.limit = self.config.get("fingerprint_limit", None)
         if self.limit == -1:  # for JSON compatibility
             self.limit = None
+
+        self.songdatafinder = SongDataFinder(self.config.get("acoustid_apikey"), None)
+
         self.get_fingerprinted_songs()
 
     def get_fingerprinted_songs(self):
@@ -49,75 +49,58 @@ class Dejavu(object):
             song_hash = song[Database.FIELD_FILE_SHA1]
             self.songhashes_set.add(song_hash)
 
-    def fingerprint_directory(self, path, extensions, nprocesses=None):
-        # Try to use the maximum amount of processes if not given.
-        try:
-            nprocesses = nprocesses or multiprocessing.cpu_count()
-        except NotImplementedError:
-            nprocesses = 1
-        else:
-            nprocesses = 1 if nprocesses <= 0 else nprocesses
+    def fingerprint_file(self, filepath):
+        songdata = self.songdatafinder.matchFile(filepath)
 
-        pool = multiprocessing.Pool(nprocesses)
+        song_name = songdata.getName()
+        song_artist = songdata.getMainArtist()
+        song_album = songdata.getAlbum()
+        song_artist_genre = songdata.getMainArtistGenre()
+        song_explicit = songdata.getExplicitRating()
+        song_length = songdata.getLength()
 
-        filenames_to_fingerprint = []
-        for filename, _ in decoder.find_files(path, extensions):
-
-            # don't refingerprint already fingerprinted files
-            if decoder.unique_hash(filename) in self.songhashes_set:
-                print "%s already fingerprinted, continuing..." % filename
-                continue
-
-            filenames_to_fingerprint.append(filename)
-
-        # Prepare _fingerprint_worker input
-        worker_input = zip(filenames_to_fingerprint,
-                           [self.limit] * len(filenames_to_fingerprint))
-
-        # Send off our tasks
-        iterator = pool.imap_unordered(_fingerprint_worker,
-                                       worker_input)
-
-        # Loop till we have all of them
-        while True:
-            try:
-                song_name, hashes, file_hash = iterator.next()
-            except multiprocessing.TimeoutError:
-                continue
-            except StopIteration:
-                break
-            except:
-                print("Failed fingerprinting")
-                # Print traceback because we can't reraise it here
-                traceback.print_exc(file=sys.stdout)
-            else:
-                sid = self.db.insert_song(song_name, file_hash)
-
-                self.db.insert_hashes(sid, hashes)
-                self.db.set_song_fingerprinted(sid)
-                self.get_fingerprinted_songs()
-
-        pool.close()
-        pool.join()
-
-    def fingerprint_file(self, filepath, song_name=None):
-        songname = decoder.path_to_songname(filepath)
         song_hash = decoder.unique_hash(filepath)
-        song_name = song_name or songname
+
         # don't refingerprint already fingerprinted files
         if song_hash in self.songhashes_set:
-            print "%s already fingerprinted, continuing..." % song_name
+            print "%s has already been fingerprinted." % song_name
+
+            return False
         else:
-            song_name, hashes, file_hash = _fingerprint_worker(
-                filepath,
-                self.limit,
-                song_name=song_name
-            )
-            sid = self.db.insert_song(song_name, file_hash)
+            hashes, file_hash = _fingerprint_worker(filepath, self.limit)
+            # Insert our song data into the songs table and return its location
+            sid = self.db.insert_song(song_name,
+                                      song_artist,
+                                      song_album,
+                                      song_artist_genre,
+                                      song_explicit,
+                                      song_length,
+                                      file_hash)
 
             self.db.insert_hashes(sid, hashes)
             self.db.set_song_fingerprinted(sid)
-            self.get_fingerprinted_songs()
+            self.get_fingerprinted_songs() # Why is this being run after every call... with two nested for loops
+
+            return True
+
+    def fingerprint_directory(self, path, extensions):
+        # TODO: Make this use the fingerprint_file, can't do multiple processes due to API limits
+        # This shouldn't be an issue once gpu acceleration is implemented
+
+        filenames_to_fingerprint = []
+        for filename, _ in decoder.find_files(path, extensions):
+            # don't refingerprint already fingerprinted files
+            if decoder.unique_hash(filename) in self.songhashes_set:
+                print "%s already fingerprinted, continuing..." % filename
+            else:
+                filenames_to_fingerprint.append(filename)
+
+        print(filenames_to_fingerprint)
+
+        for filename in filenames_to_fingerprint:
+            self.fingerprint_file(filename)
+
+        return True
 
     def find_matches(self, samples, Fs=fingerprint.DEFAULT_FS):
         hashes = fingerprint.fingerprint(samples, Fs=Fs)
@@ -152,11 +135,12 @@ class Dejavu(object):
         song = self.db.get_song_by_id(song_id)
         if song:
             # TODO: Clarify what `get_song_by_id` should return.
-            songname = song.get(Dejavu.SONG_NAME, None)
-            songartist = song.get(Dejavu.SONG_ARTIST, None)
-            songalbum = song.get(Dejavu.SONG_ALBUM, None)
-            songgenre = song.get(Dejavu.SONG_GENRE, None)
-            songlength = song.get(Dejavu.SONG_LENGTH, 0)
+            songname = song.get(Jamaisvu.SONG_NAME, None)
+            songartist = song.get(Jamaisvu.SONG_ARTIST, None)
+            songalbum = song.get(Jamaisvu.SONG_ALBUM, None)
+            songgenre = song.get(Jamaisvu.SONG_GENRE, None)
+            songexplicit = song.get(Jamaisvu.SONG_EXPLICIT, True)  # Default to yes to explicit if there is no data, we don't want explicit songs on air
+            songlength = song.get(Jamaisvu.SONG_LENGTH, 0)
         else:
             return None
 
@@ -164,18 +148,21 @@ class Dejavu(object):
         nseconds = round(float(largest) / fingerprint.DEFAULT_FS *
                          fingerprint.DEFAULT_WINDOW_SIZE *
                          fingerprint.DEFAULT_OVERLAP_RATIO, 5)
-        song = {
-            Dejavu.SONG_ID: song_id,
-            Dejavu.SONG_NAME: songname,
-            Dejavu.SONG_ARTIST: songartist,
-            Dejavu.SONG_ALBUM: songalbum,
-            Dejavu.SONG_GENRE: songgenre,
-            Dejavu.SONG_LENGTH: songlength
+        song = {  # TODO: Replace this variable...
+            Jamaisvu.SONG_ID: song_id,
+            Jamaisvu.SONG_NAME: songname,
+            Jamaisvu.SONG_ARTIST: songartist,
+            Jamaisvu.SONG_ALBUM: songalbum,
+            Jamaisvu.SONG_GENRE: songgenre,
+            Jamaisvu.SONG_EXPLICIT: songexplicit,
+            Jamaisvu.SONG_LENGTH: songlength,
 
-            Dejavu.CONFIDENCE: largest_count,
-            Dejavu.OFFSET: int(largest),
-            Dejavu.OFFSET_SECS: nseconds,
-            Database.FIELD_FILE_SHA1: song.get(Database.FIELD_FILE_SHA1, None),}
+            Jamaisvu.CONFIDENCE: largest_count,
+            Jamaisvu.OFFSET: int(largest),
+            Jamaisvu.OFFSET_SECS: nseconds,
+            Database.FIELD_FILE_SHA1: song.get(Database.FIELD_FILE_SHA1, None)
+            }
+
         return song
 
     def recognize(self, recognizer, *options, **kwoptions):
@@ -183,16 +170,13 @@ class Dejavu(object):
         return r.recognize(*options, **kwoptions)
 
 
-def _fingerprint_worker(filename, limit=None, song_name=None):
-    # Pool.imap sends arguments as tuples so we have to unpack
-    # them ourself.
+def _fingerprint_worker(filename, limit=None):
+    # I only want the hashes. This function should not has any songdata otherwise
     try:
         filename, limit = filename
     except ValueError:
         pass
 
-    songname, extension = os.path.splitext(os.path.basename(filename))
-    song_name = song_name or songname
     channels, Fs, file_hash = decoder.read(filename, limit)
     result = set()
     channel_amount = len(channels)
@@ -207,7 +191,7 @@ def _fingerprint_worker(filename, limit=None, song_name=None):
                                                  filename))
         result |= set(hashes)
 
-    return song_name, result, file_hash
+    return result, file_hash
 
 
 def chunkify(lst, n):
