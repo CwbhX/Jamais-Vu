@@ -1,7 +1,6 @@
 import acoustid
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
-client_credentials_manager = SpotifyClientCredentials()
 
 
 class SongDataFinder(object):
@@ -12,26 +11,39 @@ class SongDataFinder(object):
 
     def _topresult(self, filename):  # Use acoustID Webservice for basic information
         results = acoustid.match(self.acoustid_apikey, filename)
-        for score, recording_id, title, artist in results:
-            return (title, artist, score)
+        try:
+            for score, recording_id, title, artist in results:
+                return (title, artist, score)
+        except TypeError:  # If we could not identify a match with MusicBrains
+            return None
+
 
     def matchFile(self, filename):
-        title, artist, score = self._topresult(filename)
-        self.spotifysearch.search("%s - %s" % (title, artist))  # Plug back in our acoustID results into spotify search
+        try:
+            title, artist, score = self._topresult(filename)
+            print("")
+            print(title)
+            print(artist)
+            print("")
+            self.spotifysearch.search("%s - %s" % (title, artist))  # Plug back in our acoustID results into spotify search
 
-        return self.spotifysearch.selectResult(0)  # Return the resulting spotify track
+            return self.spotifysearch.selectResult(0)  # Return the resulting spotify track
+
+        except TypeError:  # Again, If we could not identify a match
+            return None
 
 
 class SpotifySearch(object):
 
     def __init__(self):
-        self.spotify = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
+        self.client_credentials_manager = SpotifyClientCredentials()
+        self.spotify = spotipy.Spotify(client_credentials_manager=self.client_credentials_manager)
 
     def search(self, query):
         self.results = self.spotify.search(query)
 
     def selectResult(self, index):
-        if index < getNumberOfResults:
+        if index < self.getNumberOfResults():
             return SpotifyTrack(self.results["tracks"]["items"][index])
         else:
             print("Index is too high")
@@ -91,13 +103,17 @@ class SpotifyTrack(object):
         return self.trackdata["artists"]
 
     def getMainArtist(self):
-        return self.trackdata["artists"][0]
+        return self.trackdata["artists"][0]["name"]
 
     def getMainArtistGenre(self):
         uri = self.trackdata["artists"][0]["uri"]
+        client_credentials_manager = SpotifyClientCredentials()
         spotify = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
         artistdata = spotify.artist(uri)
-        return artistdata["genres"][0]
+        try:
+            return artistdata["genres"][0]
+        except IndexError:
+            return None
 
     def getTrackNumber(self):
         return self.trackdata["track_number"]
