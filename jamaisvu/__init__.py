@@ -29,7 +29,7 @@ class Jamaisvu(object):
         db_cls = get_database(config.get("database_type", None))
 
         self.db = db_cls(**config.get("database", {}))
-        self.db.setup()
+        self.db.setup()  # Change this with an if condition
 
         # if we should limit seconds fingerprinted,
         # None|-1 means use entire track

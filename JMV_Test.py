@@ -1,4 +1,5 @@
 from jamaisvu import Jamaisvu
+from jamaisvu.recognize import FileRecognizer, MicrophoneRecognizer
 import sys
 import yaml
 
@@ -11,6 +12,13 @@ def main(config, testfile):
     print("Config info: %s" % config_information)
     jmv = Jamaisvu(config_information)
     jmv.fingerprint_file(testfile)
+
+    recognizer = FileRecognizer(jmv)
+    returned_song = recognizer.recognize_file(filename=testfile)
+    # returned_song = jmv.recognize(FileRecognizer, testfile)
+    print("Result:")
+    for key in returned_song:
+        print(str(key) + " : " + str(returned_song[key]))
 
 
 if __name__ == '__main__':

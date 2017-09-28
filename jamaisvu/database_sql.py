@@ -114,8 +114,9 @@ class SQLDatabase(Database):
     """ % (Database.FIELD_SONG_ID, Database.FIELD_OFFSET, FINGERPRINTS_TABLENAME)
 
     SELECT_SONG = """
-        SELECT %s, HEX(%s) as %s FROM %s WHERE %s = %%s;
-    """ % (Database.FIELD_SONGNAME, Database.FIELD_FILE_SHA1, Database.FIELD_FILE_SHA1, SONGS_TABLENAME, Database.FIELD_SONG_ID)
+        SELECT %s, %s, %s, %s, %s, %s, HEX(%s) as %s FROM %s WHERE %s = %%s;
+    """ % (Database.FIELD_SONGNAME, Database.FIELD_ARTIST, Database.FIELD_ALBUM, Database.FIELD_GENRE, Database.FIELD_EXPLICIT, Database.FIELD_LENGTH, Database.FIELD_FILE_SHA1,
+            Database.FIELD_FILE_SHA1, SONGS_TABLENAME, Database.FIELD_SONG_ID)
 
     SELECT_NUM_FINGERPRINTS = """
         SELECT COUNT(*) as n FROM %s
