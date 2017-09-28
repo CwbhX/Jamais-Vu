@@ -18,7 +18,7 @@ class SongDataFinder(object):
         except TypeError:  # If we could not identify a match with MusicBrains
             return None
 
-
+    # TODO: Match spotify results with artist and song name to improve results
     def matchFile(self, filename, userInput=True):
         try:
             title, artist, score = self._topresult(filename)

@@ -27,3 +27,4 @@ if __name__ == '__main__':
     testfile = sys.argv[2]
     print("Testfile: %s" % testfile)
     main(config, testfile)
+    print("")

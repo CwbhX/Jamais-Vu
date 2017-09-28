@@ -6,6 +6,7 @@ from scipy.ndimage.morphology import (generate_binary_structure,
                                       iterate_structure, binary_erosion)
 import hashlib
 from operator import itemgetter
+import time
 
 IDX_FREQ_I = 0
 IDX_TIME_J = 1
@@ -65,12 +66,15 @@ def fingerprint(channel_samples, Fs=DEFAULT_FS,
                 wsize=DEFAULT_WINDOW_SIZE,
                 wratio=DEFAULT_OVERLAP_RATIO,
                 fan_value=DEFAULT_FAN_VALUE,
-                amp_min=DEFAULT_AMP_MIN):
+                amp_min=DEFAULT_AMP_MIN,
+                debug=False):
     """
     FFT the channel, log transform output, find local maxima, then return
     locally sensitive hashes.
     """
     # FFT the signal and extract frequency components
+
+    t1 = time.time()
     arr2D = mlab.specgram(
         channel_samples,
         NFFT=wsize,
@@ -78,12 +82,24 @@ def fingerprint(channel_samples, Fs=DEFAULT_FS,
         window=mlab.window_hanning,
         noverlap=int(wsize * wratio))[0]
 
-    # apply log transform since specgram() returns linear array
-    arr2D = 10 * np.log10(arr2D)
-    arr2D[arr2D == -np.inf] = 0  # replace infs with zeros
+    specttime = time.time()-t1
 
+    # apply log transform since specgram() returns linear array
+    t1 = time.time()
+    with np.errstate(divide='ignore'):
+        arr2D = 10 * np.log10(arr2D)
+    arr2D[arr2D == -np.inf] = 0  # replace infs with zeros
+    logtime = time.time()-t1
+
+    t1 = time.time()
     # find local maxima
     local_maxima = get_2D_peaks(arr2D, plot=False, amp_min=amp_min)
+    peaktime = time.time()-t1
+
+    if debug == True:
+        print("Time to calculate Spectrogram: %s" % specttime)
+        print("Time to apply log transform: %s" % logtime)
+        print("Time to calculate Peaks: %s" % peaktime)
 
     # return hashes
     return generate_hashes(local_maxima, fan_value=fan_value)
