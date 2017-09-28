@@ -1,5 +1,5 @@
-import dejavu.fingerprint as fingerprint
-import dejavu.decoder as decoder
+import jamaisvu.fingerprint as fingerprint
+import jamaisvu.decoder as decoder
 import numpy as np
 import pyaudio
 import time
@@ -7,26 +7,26 @@ import time
 
 class BaseRecognizer(object):
 
-    def __init__(self, dejavu):
-        self.dejavu = dejavu
+    def __init__(self, jamaisvu):
+        self.jamaisvu = jamaisvu
         self.Fs = fingerprint.DEFAULT_FS
 
     def _recognize(self, *data):
         matches = []
         for d in data:
-            matches.extend(self.dejavu.find_matches(d, Fs=self.Fs))
-        return self.dejavu.align_matches(matches)
+            matches.extend(self.jamaisvu.find_matches(d, Fs=self.Fs))
+        return self.jamaisvu.align_matches(matches)
 
     def recognize(self):
         pass  # base class does nothing
 
 
 class FileRecognizer(BaseRecognizer):
-    def __init__(self, dejavu):
-        super(FileRecognizer, self).__init__(dejavu)
+    def __init__(self, jamaisvu):
+        super(FileRecognizer, self).__init__(jamaisvu)
 
     def recognize_file(self, filename):
-        frames, self.Fs, file_hash = decoder.read(filename, self.dejavu.limit)
+        frames, self.Fs, file_hash = decoder.read(filename, self.jamaisvu.limit)
 
         t = time.time()
         match = self._recognize(*frames)
@@ -47,8 +47,8 @@ class MicrophoneRecognizer(BaseRecognizer):
     default_channels    = 2
     default_samplerate  = 44100
 
-    def __init__(self, dejavu):
-        super(MicrophoneRecognizer, self).__init__(dejavu)
+    def __init__(self, jamaisvu):
+        super(MicrophoneRecognizer, self).__init__(jamaisvu)
         self.audio = pyaudio.PyAudio()
         self.stream = None
         self.data = []

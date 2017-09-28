@@ -1,11 +1,13 @@
 from songdata import SongDataFinder
 import sys
 
+
 def main(acoustid_apikey, file):
     sdf = SongDataFinder(acoustid_apikey)
     songdata = sdf.matchFile(file)
 
     if(songdata != None):
+        print("Spotify Data:")
         print("Song Name: %s" % songdata.getName())
         print("Song Artist: %s" % songdata.getMainArtist())
         print("Song Album: %s" % songdata.getAlbum())

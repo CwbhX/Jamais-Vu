@@ -1,8 +1,8 @@
 from __future__ import division
 from pydub import AudioSegment
-from dejavu.decoder import path_to_songname
-from dejavu import Jamaisvu
-from dejavu.fingerprint import *
+from jamaisvu.decoder import path_to_songname
+from jamaisvu import Jamaisvu
+from jamaisvu.fingerprint import *
 import traceback
 import fnmatch
 import os, re, ast
@@ -213,7 +213,7 @@ class JamaisvuTest(object):
             line = self.get_line_id(song)
             result = subprocess.check_output([
                 "python",
-                "dejavu.py",
+                "jamaisvu.py",
                 '-r',
                 'file',
                 self.test_folder + "/" + f])

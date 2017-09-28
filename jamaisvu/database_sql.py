@@ -5,7 +5,7 @@ import Queue
 import MySQLdb as mysql
 from MySQLdb.cursors import DictCursor
 
-from dejavu.database import Database
+from jamaisvu.database import Database
 
 
 class SQLDatabase(Database):
@@ -77,14 +77,14 @@ class SQLDatabase(Database):
 			`%s` varchar(250) not null,
 			`%s` varchar(250) not null,
 			`%s` varchar(250) not null,
-            '%s' boolean default null,
+            `%s` boolean default null,
 			`%s` mediumint unsigned not null,
             `%s` tinyint default 0,
             `%s` binary(20) not null,
         PRIMARY KEY (`%s`),
         UNIQUE KEY `%s` (`%s`)
     ) ENGINE=INNODB;""" % (
-        SONGS_TABLENAME, Database.FIELD_SONG_ID, Database.FIELD_SONGNAME, Database.FIELD_ARTIST, FIELD_ALBUM, FIELD_GENRE, FIELD_EXPLICIT, FIELD_LENGTH, FIELD_FINGERPRINTED,
+        SONGS_TABLENAME, Database.FIELD_SONG_ID, Database.FIELD_SONGNAME, Database.FIELD_ARTIST, Database.FIELD_ALBUM, Database.FIELD_GENRE, Database.FIELD_EXPLICIT, Database.FIELD_LENGTH, FIELD_FINGERPRINTED,
         Database.FIELD_FILE_SHA1,
         Database.FIELD_SONG_ID, Database.FIELD_SONG_ID, Database.FIELD_SONG_ID,
     )
@@ -96,8 +96,8 @@ class SQLDatabase(Database):
     """ % (FINGERPRINTS_TABLENAME, Database.FIELD_HASH, Database.FIELD_SONG_ID, Database.FIELD_OFFSET)
 
     ##                             Name, Artist, Album, Genre, Length, SHA1
-    INSERT_SONG = "INSERT INTO %s (%s, %s, %s, %s, %s, %s) values (%%s, %%s, %%s, %%s, %%s UNHEX(%%s));" % (
-        SONGS_TABLENAME, Database.FIELD_SONGNAME, Database.FIELD_ARTIST, Database.FIELD_ALBUM, Database.FIELD_GENRE, Database.FIELD_LENGTH, Database.FIELD_FILE_SHA1)
+    INSERT_SONG = "INSERT INTO %s (%s, %s, %s, %s, %s, %s, %s) values (%%s, %%s, %%s, %%s, %%s, %%s, UNHEX(%%s));" % (
+        SONGS_TABLENAME, Database.FIELD_SONGNAME, Database.FIELD_ARTIST, Database.FIELD_ALBUM, Database.FIELD_GENRE, Database.FIELD_EXPLICIT, Database.FIELD_LENGTH, Database.FIELD_FILE_SHA1)
 
     # selects
     SELECT = """
@@ -156,7 +156,7 @@ class SQLDatabase(Database):
 
     def setup(self):
         """
-        Creates any non-existing tables required for dejavu to function.
+        Creates any non-existing tables required for jamaisvu to function.
 
         This also removes all songs that have been added but have no
         fingerprints associated with them.
@@ -168,7 +168,7 @@ class SQLDatabase(Database):
 
     def empty(self):
         """
-        Drops tables created by dejavu and then creates them again
+        Drops tables created by jamaisvu and then creates them again
         by calling `SQLDatabase.setup`.
 
         .. warning:

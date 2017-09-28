@@ -22,8 +22,8 @@ class SongDataFinder(object):
         try:
             title, artist, score = self._topresult(filename)
             print("")
-            print(title)
-            print(artist)
+            print("AcoustID Name: %s" % title)
+            print("AcoustID Artist: %s" % artist)
             print("")
             self.spotifysearch.search("%s - %s" % (title, artist))  # Plug back in our acoustID results into spotify search
 

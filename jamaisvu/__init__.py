@@ -1,6 +1,6 @@
-from dejavu.database import get_database, Database
+from jamaisvu.database import get_database, Database
 from songdata import SongDataFinder
-import dejavu.decoder as decoder
+import jamaisvu.decoder as decoder
 import fingerprint
 
 
@@ -37,7 +37,7 @@ class Jamaisvu(object):
         if self.limit == -1:  # for JSON compatibility
             self.limit = None
 
-        self.songdatafinder = SongDataFinder(self.config.get("acoustid_apikey"), None)
+        self.songdatafinder = SongDataFinder(self.config.get("acoustid_apikey"))
 
         self.get_fingerprinted_songs()
 
