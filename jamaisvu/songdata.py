@@ -1,5 +1,6 @@
 import acoustid
 import spotipy
+import pymsgbox
 from spotipy.oauth2 import SpotifyClientCredentials
 
 
@@ -18,7 +19,7 @@ class SongDataFinder(object):
             return None
 
 
-    def matchFile(self, filename):
+    def matchFile(self, filename, userInput=True):
         try:
             title, artist, score = self._topresult(filename)
             print("")
@@ -30,7 +31,16 @@ class SongDataFinder(object):
             return self.spotifysearch.selectResult(0)  # Return the resulting spotify track
 
         except TypeError:  # Again, If we could not identify a match
-            return None
+            # TODO: Work on the userInput exception handling... e.g. skip None Songs
+            if userInput == True:
+                pymsgbox.alert(text='Could not identify song automatically', title='Song ID Error', button='OK')
+                userSongName = pymsgbox.prompt(text='Song Name', title='Enter Song Name')
+                userSongArtist = pymsgbox.prompt(text='Artist', title='Enter Artist Name')
+
+                self.spotifysearch.search("%s - %s" % (userSongName, userSongArtist))  # Search spotify with user entered values
+                return self.spotifysearch.selectResult(0)  # Return the resulting spotify track
+            else:
+                return None
 
 
 class SpotifySearch(object):

@@ -50,23 +50,26 @@ class Jamaisvu(object):
             self.songhashes_set.add(song_hash)
 
     def fingerprint_file(self, filepath):
-        songdata = self.songdatafinder.matchFile(filepath)
+        song_hash = decoder.unique_hash(filepath)  # Generate song file hash
 
-        song_name = songdata.getName()
-        song_artist = songdata.getMainArtist()
-        song_album = songdata.getAlbum()
-        song_artist_genre = songdata.getMainArtistGenre()
-        song_explicit = songdata.getExplicitRating()
-        song_length = songdata.getLength()
-
-        song_hash = decoder.unique_hash(filepath)
-
-        # don't refingerprint already fingerprinted files
+        # Don't refingerprint already fingerprinted files or try to find data
         if song_hash in self.songhashes_set:
-            print "%s has already been fingerprinted." % song_name
+            print "%s has already been fingerprinted." % song_hash
 
             return False
         else:
+            songdata = self.songdatafinder.matchFile(filepath)
+            if songdata == None:  # Exit like the previous condition, if we disabled userinput
+                print("Could not ID song")
+                return False
+
+            song_name = songdata.getName()
+            song_artist = songdata.getMainArtist()
+            song_album = songdata.getAlbum()
+            song_artist_genre = songdata.getMainArtistGenre()
+            song_explicit = songdata.getExplicitRating()
+            song_length = songdata.getLength()
+
             hashes, file_hash = _fingerprint_worker(filepath, self.limit)
             # Insert our song data into the songs table and return its location
             sid = self.db.insert_song(song_name,
