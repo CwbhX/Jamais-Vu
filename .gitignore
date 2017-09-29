@@ -4,6 +4,7 @@ mp3
 *.wav
 *.mp3
 .DS_Store
+*.DS_Store
 *.cnf
 *.log
 *.sql
