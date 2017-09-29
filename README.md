@@ -1,7 +1,7 @@
 Jamaisvu
 ==========
 
-A work-in-progress improvement on Will Drevo's [Dejavu](https://github.com/worldveil/dejavu) python library for use at WJRH at Lafayette College.
+A work-in-progress improvement on Will Drevo's [Dejavu](https://github.com/worldveil/dejavu) python library for use at [WJRH](http://wjrh.org) at Lafayette College.
 The goals of this improvement is to:
 - Flesh out the programme's features
 - Add a significant more amount of information about songs
