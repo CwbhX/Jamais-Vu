@@ -125,6 +125,7 @@ def get_2D_peaks(arr2D, plot=False, amp_min=DEFAULT_AMP_MIN):
 
     # filter peaks
     amps = amps.flatten()
+    print("# of Amplitudes %s" % len(amps))
     peaks = zip(i, j, amps)
     peaks_filtered = [x for x in peaks if x[2] > amp_min]  # freq, time, amp
 

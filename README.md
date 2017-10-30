@@ -7,6 +7,8 @@ The goals of this improvement is to:
 - Add a significant more amount of information about songs
 - GPU acceleration via CUDA
 
+View the progress of Jamaisvu which I occasionally write about [here](http://clement.nyc).
+
 ## Installation and Dependencies:
 
 - numpy
@@ -19,6 +21,8 @@ The goals of this improvement is to:
 - pydub
 - pyaudio
 - matplotlib
+- reikna
+- scikit-cuda
 
 ## Setup
 

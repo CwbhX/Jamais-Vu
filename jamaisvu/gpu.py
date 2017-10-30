@@ -52,10 +52,10 @@ class GPU(object):
 
         # Channel 1
         self.vectorMultiplyMod(cuda.Out(product1), cuda.In(channel1), cuda.In(hannNPArray),
-                                block=(threadLengthx,1,1), grid=(gridOfBlocksx,1))  # thread dimensions in a block, blocks in a grid
+                                block=(threadLengthx, 1, 1), grid=(gridOfBlocksx, 1))  # thread dimensions in a block, blocks in a grid
         # Channel 2
         self.vectorMultiplyMod(cuda.Out(product2), cuda.In(channel2), cuda.In(hannNPArray),
-                        block=(threadLengthx,1,1), grid=(gridOfBlocksx,1))
+                        block=(threadLengthx, 1, 1), grid=(gridOfBlocksx, 1))
 
         # TODO: Compile results into complex64 array for FFT
 
