@@ -2,27 +2,28 @@ Jamaisvu
 ==========
 
 A work-in-progress improvement on Will Drevo's [Dejavu](https://github.com/worldveil/dejavu) python library for use at [WJRH](http://wjrh.org) at Lafayette College.
+
 The goals of this improvement is to:
-- Flesh out the programme's features
+- Flesh out the programme's features such as integration with [Teal](https://github.com/wjrh/Teal)
 - Add a significant more amount of information about songs
-- GPU acceleration via CUDA
+- GPU acceleration via CUDA (This is pretty much done!)
 
 View the progress of Jamaisvu which I occasionally write about [here](http://clement.nyc).
 
 ## Installation and Dependencies:
 
-- numpy
-- scipy
-- pycuda
-- pyfft
-- mysql
-- pymsgbox
-- pyyaml
-- pydub
-- pyaudio
-- matplotlib
-- reikna
-- scikit-cuda
+- Numpy
+- Scipy
+- Pycuda
+- AcoustID
+- Mysql
+- Mysql-config
+- Spotipy
+- Pymsgbox
+- Pydub
+- Pyaudio (also portaudio19-dev)
+- Reikna
+- Scikit-cuda
 
 ## Setup
 
