@@ -1,12 +1,14 @@
-import numpy as np
+import numpy
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 from scipy.ndimage.filters import maximum_filter
 from scipy.ndimage.morphology import (generate_binary_structure,
                                       iterate_structure, binary_erosion)
-import hashlib
+import hashlib, time
 from operator import itemgetter
-import time
+
+from reikna.cluda import any_api
+from gpu import maximum_filter_2d, Spectrogram
 
 IDX_FREQ_I = 0
 IDX_TIME_J = 1
@@ -73,26 +75,31 @@ def fingerprint(channel_samples, Fs=DEFAULT_FS,
     locally sensitive hashes.
     """
     # FFT the signal and extract frequency components
+    channel_samples = channel_samples.astype("float32") # Import for the GPU
+
+
 
     t1 = time.time()
-    arr2D = mlab.specgram(
-        channel_samples,
-        NFFT=wsize,
-        Fs=Fs,
-        window=mlab.window_hanning,
-        noverlap=int(wsize * wratio))[0]
+    # Reikna setup for Spectrogram generation
+    api = any_api()
+    thr = api.Thread.create()
+    specgram_reikna = Spectrogram(channel_samples, NFFT=wsize, noverlap=int(wsize * wratio), pad_to=wsize).compile(thr)
+    x_dev = thr.to_device(channel_samples)
+    spectre_dev = thr.empty_like(specgram_reikna.parameter.output)
+    specgram_reikna(spectre_dev, x_dev)
 
+    arr2D = spectre_dev.get() ## Get spectrogram
     specttime = time.time()-t1
 
-    # apply log transform since specgram() returns linear array
+    # Apply log transform since specgram() returns linear array
     t1 = time.time()
-    with np.errstate(divide='ignore'):
-        arr2D = 10 * np.log10(arr2D)
-    arr2D[arr2D == -np.inf] = 0  # replace infs with zeros
+    with numpy.errstate(divide='ignore'):
+        arr2D = 10 * numpy.log10(arr2D)
+    arr2D[arr2D == -numpy.inf] = 0  # Replace infs with zeros
     logtime = time.time()-t1
 
     t1 = time.time()
-    # find local maxima
+    # Find local maxima
     local_maxima = get_2D_peaks(arr2D, plot=False, amp_min=amp_min)
     peaktime = time.time()-t1
 
@@ -108,34 +115,33 @@ def fingerprint(channel_samples, Fs=DEFAULT_FS,
 def get_2D_peaks(arr2D, plot=False, amp_min=DEFAULT_AMP_MIN):
     # http://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.morphology.iterate_structure.html#scipy.ndimage.morphology.iterate_structure
     struct = generate_binary_structure(2, 1)
-    neighborhood = iterate_structure(struct, PEAK_NEIGHBORHOOD_SIZE)
+    neighborhood = iterate_structure(struct, PEAK_NEIGHBORHOOD_SIZE).astype(numpy.int32) # Set out footprint but with 1s and 0s for True/False
 
-    # find local maxima using our fliter shape
-    local_max = maximum_filter(arr2D, footprint=neighborhood) == arr2D
+    # Find local maxima using our fliter shape
+    local_max = maximum_filter_2d(arr2D, footprint=neighborhood) == arr2D # Use our Cuda Kernel to compute
     background = (arr2D == 0)
     eroded_background = binary_erosion(background, structure=neighborhood,
                                        border_value=1)
 
     # Boolean mask of arr2D with True at peaks
-    detected_peaks = local_max - eroded_background
+    detected_peaks = local_max ^ eroded_background # Use ^ now instead of -, since - has been deprecated!
 
-    # extract peaks
+    # Extract peaks
     amps = arr2D[detected_peaks]
-    j, i = np.where(detected_peaks)
+    j, i = numpy.where(detected_peaks)
 
-    # filter peaks
+    # Filter peaks
     amps = amps.flatten()
-    print("# of Amplitudes %s" % len(amps))
     peaks = zip(i, j, amps)
     peaks_filtered = [x for x in peaks if x[2] > amp_min]  # freq, time, amp
 
-    # get indices for frequency and time
+    # Get indices for frequency and time
     frequency_idx = [x[1] for x in peaks_filtered]
     time_idx = [x[0] for x in peaks_filtered]
 
     if plot:
-        # scatter of the peaks
-        fig, ax = plt.subplots()
+        # Scatter of the peaks
+        ax = plt.subplots()
         ax.imshow(arr2D)
         ax.scatter(time_idx, frequency_idx)
         ax.set_xlabel('Time')
