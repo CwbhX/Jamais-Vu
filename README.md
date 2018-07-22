@@ -2,6 +2,8 @@
 
 A work-in-progress improvement upon Will Drevo's [Dejavu](https://github.com/worldveil/dejavu) project for audio fingering printing in Python. The aim of Jamaisvu is to be optimised and effective enough to be used as a sound identifier for DJs at Lafayette College's [WJRH Radio](http://wjrh.org).
 
+I occasionally write about the progress of Jamaisvu on my [website](http://clement.nyc), and features and bugs I am currently working on can be viewed on my [Trello board](https://trello.com/b/cGIQLRYg/jamaisvu)
+
 The main goals for Jamaisvu over Dejavu is:
 
 * Provide more features
