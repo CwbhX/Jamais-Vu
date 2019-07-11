@@ -29,7 +29,7 @@ What dependencies you will need to run Jamaisvu:
 * AcoustID
 * Mysql
 * Mysql-config
-* Spotipy
+* Spotipy (You will need to set this up with your own Spotify account and keys in your PATH!)
 * Pymsgbox
 * Pydub
 * Pyaudio (also portaudio19-dev)
